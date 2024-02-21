@@ -19,9 +19,7 @@
 
 ## DEMO 
 
-    <img
-src="./bike_gif.gif"
-/>
+    <img src="./imggif.gif"/>
 
 
 
