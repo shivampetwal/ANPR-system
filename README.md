@@ -17,10 +17,7 @@
         * To quit the running application, press 'Q'.
 
 
-## DEMO 
-
-    <img src="./imggif.gif"/>
-
+ <img src="./imggif.gif"/>
 
 
 
