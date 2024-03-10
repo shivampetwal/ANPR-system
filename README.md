@@ -40,7 +40,6 @@
 
 
 
-
 ## Technologies Used: 
 
     1. YOLOv5 Algorithm : 
