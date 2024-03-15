@@ -10,13 +10,11 @@ from PIL import Image
 import time
 
 
-#Sets the path to the pre-trained YOLOv5 model weights.
-yolov5_weight_file = 'rider_helmet_number_small.pt' # ... may need full path
 
-#Sets the path to the helmet image classifier model weights.
+yolov5_weight_file = 'rider_helmet_number_small.pt' # ... may need full path
 helmet_classifier_weight = 'helment_no_helmet98.6.pth'
-conf_set=0.35  #Sets a confidence threshold for object detections.
-frame_size=(800, 480)  #frame size for video processing.
+conf_set=0.35 
+frame_size=(800, 480) 
 head_classification_threshold= 3.0 # make this value lower if want to detect non helmet more aggresively;
 
 
@@ -27,19 +25,19 @@ head_classification_threshold= 3.0 # make this value lower if want to detect non
 # 800, 480 # cs=3.9
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = attempt_load(yolov5_weight_file, map_location=device) #Loads the YOLOv5 model onto the chosen device.
+model = attempt_load(yolov5_weight_file, map_location=device)
 cudnn.benchmark = True 
-names = model.module.names if hasattr(model, 'module') else model.names  #Extracts the class names from the YOLOv5 model.
+names = model.module.names if hasattr(model, 'module') else model.names
 
 
 
 ### Image classification
 # labels = ['helmet', 'no helmet']
-model2 = torch.load(helmet_classifier_weight, map_location=device)  # ... may need full path ///loads helmet classifier model
+model2 = torch.load(helmet_classifier_weight, map_location=device)  # ... may need full path
 model2.eval()
 
 
-transform = transforms.Compose([   #Defines a series of image transformations for preprocessing:
+transform = transforms.Compose([
 			transforms.Resize(144),
 			# transforms.CenterCrop(142),
 			transforms.ToTensor(),
@@ -47,7 +45,7 @@ transform = transforms.Compose([   #Defines a series of image transformations fo
 		  ]) 
 
 
-def img_classify(frame):		#Helmet Classification Function:
+def img_classify(frame):
 	# print('Head size: ',frame.shape[:-1])
 
 	if frame.shape[0]<46 : # skiping small size heads <----------------  you can adjust this value
@@ -55,8 +53,8 @@ def img_classify(frame):		#Helmet Classification Function:
 
 	frame = transform(Image.fromarray(frame))
 	frame = frame.unsqueeze(0)
-	prediction = model2(frame)		#Feeds the transformed frame to the helmet classifier model.
-	result_idx = torch.argmax(prediction).item() #Returns whether a helmet is detected or not, along with the confidence score, based on the thresholds.
+	prediction = model2(frame)
+	result_idx = torch.argmax(prediction).item()
 	prediction_conf = sorted(prediction[0]) 
 
 	cs = (prediction_conf[-1]-prediction_conf[-2]).item() # confident score
@@ -70,8 +68,8 @@ def img_classify(frame):		#Helmet Classification Function:
 
 
 
-def object_detection(frame): #Object Detection Function    , 
-	img = torch.from_numpy(frame)  #Converts the frame to a PyTorch tensor and prepares it for the model.
+def object_detection(frame):
+	img = torch.from_numpy(frame)
 	img = img.permute(2, 0, 1).float().to(device)
 	img /= 255.0  
 	if img.ndimension() == 3:
@@ -81,7 +79,7 @@ def object_detection(frame): #Object Detection Function    ,
 	pred = non_max_suppression(pred, conf_set, 0.30) # prediction, conf, iou
 
 	detection_result = []
-	for i, det in enumerate(pred): #Iterates through detected objects and extracts bounding box coordinates, confidence scores, and class IDs.
+	for i, det in enumerate(pred):
 		if len(det): 
 			for d in det: # d = (x1, y1, x2, y2, conf, cls)
 				x1 = int(d[0].item())
@@ -97,14 +95,10 @@ def object_detection(frame): #Object Detection Function    ,
 				detection_result.append([x1, y1, x2, y2, conf, c])
 				
 				frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (255,0,0), 1) # box
-				if c!=1: 		# if it is not head bbox, then write use putText
+				if c!=1: # if it is not head bbox, then write use putText
 					frame = cv2.putText(frame, f'{names[c]} {str(conf)}', (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
 
 	return (frame, detection_result)
-
-#Prints detection information for debugging.
-#Draws bounding boxes and labels on the frame for visual representation.
-#Returns the modified frame and a list of detection results.
 
 
 def inside_box(big_box, small_box):
@@ -112,5 +106,5 @@ def inside_box(big_box, small_box):
 	y1 = small_box[1] - big_box[1]
 	x2 = big_box[2] - small_box[2]
 	y2 = big_box[3] - small_box[3]
-	return not bool(min([x1, y1, x2, y2, 0]))  #Returns True if the smaller box is inside, False otherwise.
+	return not bool(min([x1, y1, x2, y2, 0]))
 
