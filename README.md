@@ -43,6 +43,7 @@
 ## Technologies Used: 
 
     1. YOLOv5 Algorithm : 
+            * Real-time object detection algorithm used in computer vision applications!
             * YOLOv5 facilitates real-time object detection, efficiently identifying riders,
               license plates, and heads in images.
     
